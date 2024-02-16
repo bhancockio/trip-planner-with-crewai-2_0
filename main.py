@@ -72,6 +72,7 @@ travel_agent = Agent(
     backstory="""Specialist in travel planning and logistics with 
         decades of experience""",
     tools=[CalculatorTools().calculate],
+    max_iter=7
 )
 
 city_selection_expert = Agent(
@@ -112,7 +113,7 @@ quality_control_expert = Agent(
           the overall client experience. Your role as a quality control expert 
           is the culmination of your dedication to elevating travel experiences 
           through precision, reliability, and client satisfaction.""",
-    tools=[],
+    tools=[]+human_tools,
 )
 
 # ------ TASKS ------
@@ -125,13 +126,7 @@ manager_task = Task(
         a comprehensive with detailed per-day plans, including budget, 
         packing suggestions."""),
     agent=manager,
-    expected_output=dedent(f"""
-        A comprehensive 7-day travel itinerary for {destination}, including:
-        - Daily activities aligned with interests: Hiking, Yoga, Sightseeing
-        - Detailed budget breakdown for accommodations, meals, transportation, and activities
-        - Packing suggestions based on the destination's weather and planned activities
-        - Each day's plan should include morning, afternoon, and evening activities
-        """),
+    async_execution=False
 )
 
 identify_city = Task(
@@ -156,6 +151,13 @@ identify_city = Task(
         Traveler Interests: {interests}
         """),
     agent=city_selection_expert,
+    expected_output=dedent("""
+        A detailed report on the selected city including:
+        - Justification for city selection based on weather, seasonal events, and prices
+        - Overview of flight costs, weather forecast, and main attractions
+        - Analysis comparing multiple cities and why the chosen city is best for the trip
+    """),
+    async_execution=False
 )
 
 gather_city_info = Task(
@@ -191,6 +193,7 @@ gather_city_info = Task(
         - Weather forecast for the trip dates with appropriate clothing suggestions
         - High-level cost estimates for suggested activities and spots
         """),
+    async_execution=False
 
 )
 
@@ -224,15 +227,10 @@ plan_itinerary = Task(
         Traveler Interests: {interests}
       """),
     agent=travel_agent,
-    context=[identify_city, gather_city_info],
     expected_output=dedent(f"""
-        A complete 7-day travel itinerary in markdown format for {destination}, including:
-        - A day-by-day schedule with activities, dining, and lodging
-        - Weather forecasts and clothing/packing suggestions
-        - Detailed budget breakdown covering all expenses
-        - Specific reasons for choosing each place, hotel, and restaurant
-        - Highlight what makes each recommended place special
+        A complete 7-day travel itinerary in markdown format to {destination}
         """),
+    async_execution=False,
 )
 
 quality_control = Task(
@@ -243,7 +241,17 @@ quality_control = Task(
         example where you outline what the traveler will do in the 
         morning, afternoon, and evening along with optional opportunities. 
         Obviously the exact information will differ for each trip, 
-        but the format should be the same.
+        but the format should be the same. 
+        
+        Your feedback should only include suggestions around formatting 
+        and making sure the itenerary includes all of the necessary 
+        information to generate the following itinerary. If the itinerary 
+        is missing any information, you should provide feedback on what is 
+        missing and how it can be improved. 
+                       
+        If the itinerary includes any information that is not necessary, 
+        provide feedback on what needs to be removed and why.
+                
                        
         EXAMPLE 7 DAY ITNERARY:
                        
@@ -318,13 +326,10 @@ quality_control = Task(
     agent=quality_control_expert,
     context=[plan_itinerary],
     expected_output=dedent("""
-        Detailed feedback on the 7-day travel itinerary with:
-        - Assessment of the itinerary's adherence to the format and quality standards
-        - Suggestions for improvements on logistics, budget, and content
-        - Verification of the feasibility and attractiveness of suggested activities
-        - Recommendations for enhancing client satisfaction with the travel plan
-        - Confirmation that all details align with the agency’s reputation for excellence
+        Actionable feedback on the 7-day travel itinerary with 
+        assessment of the itinerary's adherence to the format and quality standards
         """),
+    async_execution=False
 )
 
 

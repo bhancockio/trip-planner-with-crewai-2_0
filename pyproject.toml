@@ -6,7 +6,7 @@ authors = ["Joao Moura, Brandon Hancock"]
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<3.12"
-crewai = "^0.10.0"
+crewai = "^0.11.0"
 duckduckgo-search = "^4.4.2"
 python-dotenv = "^1.0.1"
 requests = "^2.31.0"
